@@ -1,0 +1,37 @@
+version: "3"
+services:
+  # Foi criada uma rede chamada "listavip-production" para que assim os containers consigam se conversar a partir dos hostnames criados para cada um (postgresdb e tomcat).
+  # Assim, dentro do projeto, conseguimos configurar o DataSource informando o endereço do postgres pelo hostname (postgresdb)
+  #serviço
+  postgresdb:
+    image: postgres:latest
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: listavip
+    ports:
+      - "5434:5432"
+    volumes:
+      - /home/ramon/Documentos/alura/docker/volume-exemplo:/var/lib/postgresql
+    networks:
+      - listavip-production
+
+  #serviço -> este sobe apenas quando o postgresdb subir devido a tag "depends_on"
+  tomcat:
+    build:
+      dockerfile: ./docker/server.dockerfile
+      context: .
+    image: ramon/tomcat
+    container_name: tomcat
+    ports:
+      - "8080:8080"
+    networks:
+      - listavip-production
+    depends_on:
+      - "postgresdb"
+
+networks:
+  listavip-production:
+    driver: bridge
